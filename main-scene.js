@@ -27,23 +27,25 @@ import {Text_Demo}
                     from "./examples/text-demo.js";
 import {Transforms_Sandbox_Base, Transforms_Sandbox}
                     from "./examples/transforms-sandbox.js";
+import {Cloth_Demo} from "./cloth_demo.js";
 
 Object.assign (defs,
-               {Minimal_Webgl_Demo},
-               {Axes_Viewer, Axes_Viewer_Test_Scene, Matrix_Game},
-               {Demonstration},
-               {Inertia_Demo, Collision_Demo},
-               {Many_Lights_Demo},
-               {Obj_File_Demo},
-               {Parametric_Surfaces},
-               {Scene_To_Texture_Demo},
-               {Text_Demo},
-               {Transforms_Sandbox_Base, Transforms_Sandbox}
+    {Minimal_Webgl_Demo},
+    {Axes_Viewer, Axes_Viewer_Test_Scene, Matrix_Game},
+    {Demonstration},
+    {Inertia_Demo, Collision_Demo},
+    {Many_Lights_Demo},
+    {Obj_File_Demo},
+    {Parametric_Surfaces},
+    {Scene_To_Texture_Demo},
+    {Text_Demo},
+    {Transforms_Sandbox_Base, Transforms_Sandbox},
+    {Cloth_Demo}
 );
 
 // ******************** SELECT THE DEMO TO DISPLAY:
 
-const main_scene        = Parametric_Surfaces;
+const main_scene        = Cloth_Demo;
 const additional_scenes = [];
 
 export {main_scene, additional_scenes, defs};
