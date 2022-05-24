@@ -28,6 +28,7 @@ import {Text_Demo}
 import {Transforms_Sandbox_Base, Transforms_Sandbox}
                     from "./examples/transforms-sandbox.js";
 import {Cloth_Demo} from "./cloth_demo.js";
+import {Frenet_Frame} from "./frenet_frame.js";
 
 Object.assign (defs,
     {Minimal_Webgl_Demo},
@@ -40,12 +41,13 @@ Object.assign (defs,
     {Scene_To_Texture_Demo},
     {Text_Demo},
     {Transforms_Sandbox_Base, Transforms_Sandbox},
-    {Cloth_Demo}
+    {Cloth_Demo},
+    {Frenet_Frame}
 );
 
 // ******************** SELECT THE DEMO TO DISPLAY:
 
-const main_scene        = Cloth_Demo;
+const main_scene        = Frenet_Frame;
 const additional_scenes = [];
 
 export {main_scene, additional_scenes, defs};
