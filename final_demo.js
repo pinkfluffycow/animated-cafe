@@ -7,8 +7,8 @@ import {Cloth_Simulation} from "./cloth_simulation.js";
 const { vec, vec3, vec4, color, Mat4, Shader, Texture, Component } = tiny;
 
 export
-const Room_demo_base = defs.Room_demo_base =
-    class Room_demo_base extends Component
+const Final_demo_base = defs.Final_demo_base =
+    class Final_demo_base extends Component
     {
       init()
       {
@@ -80,7 +80,6 @@ const Room_demo_base = defs.Room_demo_base =
             [5, 2.25, 2.25,
                 -10, 0, 0]
         ];
-        //[8, 2, 2.25, 0, 0, 5]
         for (const p of control_points) {
           this.spline.add_point(...p);
         }
@@ -88,9 +87,12 @@ const Room_demo_base = defs.Room_demo_base =
         this.spline.constructArcLengthMap(1000);
         this.prev_u = 0;
 
+
+        // Initialize curve
         this.sample_cnt = 100;
         const curve_fn = (t) => this.spline.get_position(t);
         this.curve = new Curve_Shape(curve_fn, this.sample_cnt);
+
 
         // Initialize articulated body
         this.robot = new Articulated_Body();
@@ -102,13 +104,15 @@ const Room_demo_base = defs.Room_demo_base =
         this.ball_radius = 0.2;
 
 
-        // Initialize left cloth
-        const width = 2, height = 5;
+        // Set up shared cloth parameters
+        const width = 2, height = 4;
         const density = 3;
         const n = density * height + 1, m = density * width + 1;
-        this.left_cloth_offset = vec3(5.8, 0.95, 0);
         let dx = width / (m - 1), dy = height / (n - 1);
 
+
+        // Initialize left cloth
+        this.left_cloth_offset = vec3(4.9, 1.95, 0);
         this.left_cloth_sim = new Cloth_Simulation(width, height, n, m, this.left_cloth_offset);
         this.left_cloth_sim.initialize(0.5, 50, 1);
 
@@ -131,8 +135,32 @@ const Room_demo_base = defs.Room_demo_base =
         );
 
 
+        // Initialize middle cloth
+        this.middle_cloth_offset = vec3(7, 1.95, 0);
+        this.middle_cloth_sim = new Cloth_Simulation(width, height, n, m, this.middle_cloth_offset);
+        this.middle_cloth_sim.initialize(0.5, 50, 1);
+
+        // Fix endpoints
+        for (let i = 0; i < 3; ++i) {
+          this.middle_cloth_sim.particles[0][i].isFixed = true;
+          this.middle_cloth_sim.particles[0][m - i - 1].isFixed = true;
+        }
+
+        // Initialize sheet
+        const middle_cloth_corner = this.middle_cloth_offset.plus(0, height, 0);
+        const middle_row_operation = (s,p) => p ? p.minus(vec3(0, dy, 0)) : middle_cloth_corner;
+        const middle_column_operation = (t,p) => p.plus(vec3(dx, 0, 0));
+        this.shapes.middle_cloth_sheet = new defs.Grid_Patch(
+            n - 1,
+            m - 1,
+            middle_row_operation,
+            middle_column_operation,
+            [[0, width/8], [0, height/8]]
+        );
+
+
         // Initialize right cloth
-        this.right_cloth_offset = vec3(8.2, 0.95, 0);
+        this.right_cloth_offset = vec3(9.1, 1.95, 0);
         this.right_cloth_sim = new Cloth_Simulation(width, height, n, m, this.right_cloth_offset);
         this.right_cloth_sim.initialize(0.5, 50, 1);
 
@@ -144,18 +172,18 @@ const Room_demo_base = defs.Room_demo_base =
 
         // Initialize sheet
         const right_cloth_corner = this.right_cloth_offset.plus(0, height, 0);
-        const row_operation2 = (s,p) => p ? p.minus(vec3(0, dy, 0)) : right_cloth_corner;
-        const column_operation2 = (t,p) => p.plus(vec3(dx, 0, 0));
+        const right_row_operation = (s,p) => p ? p.minus(vec3(0, dy, 0)) : right_cloth_corner;
+        const right_column_operation = (t,p) => p.plus(vec3(dx, 0, 0));
         this.shapes.right_cloth_sheet = new defs.Grid_Patch(
             n - 1,
             m - 1,
-            row_operation2,
-            column_operation2,
+            right_row_operation,
+            right_column_operation,
             [[0, width/8], [0, height/8]]
         );
 
 
-        // Cloth parameters
+        // Set up cloth drawing parameters
         this.isDrawingParticles = false;
         this.time_step = 0.01;
 
@@ -169,7 +197,7 @@ const Room_demo_base = defs.Room_demo_base =
       render_animation( caller )
       {
         // display():  Called once per frame of animation.  We'll isolate out
-        // the code that actually draws things into Robot_demo, a
+        // the code that actually draws things into Final_Demo, a
         // subclass of this Scene.  Here, the base class's display only does
         // some initial setup.
 
@@ -187,7 +215,6 @@ const Room_demo_base = defs.Room_demo_base =
 
           // !!! Camera changed here
           Shader.assign_camera(Mat4.look_at(vec3 (15, 8, 20), vec3 (5, 5, 0), vec3 (0, 1, 0)), this.uniforms);
-          //Shader.assign_camera(Mat4.look_at(vec3 (0, 3.3, 4), vec3 (5, 3.3, 3), vec3 (0, 1, 0)), this.uniforms);
         }
         this.uniforms.projection_transform = Mat4.perspective( Math.PI/4, caller.width/caller.height, 1, 100 );
 
@@ -207,14 +234,14 @@ const Room_demo_base = defs.Room_demo_base =
       }
     }
 
-// **Robot_demo** is a Scene object that can be added to any display canvas.
+// **Final_Demo** is a Scene object that can be added to any display canvas.
 // This particular scene is broken up into two pieces for easier understanding.
-// See the other piece, My_Demo_Base, if you need to see the setup code.
+// See the other piece, Final_demo_base, if you need to see the setup code.
 // The piece here exposes only the display() method, which actually places and draws
 // the shapes.  We isolate that code so it can be experimented with on its own.
 // This gives you a very small code sandbox for editing a simple scene, and for
 // experimenting with matrix transformations.
-export class Room_Demo extends Room_demo_base
+export class Final_Demo extends Final_demo_base
 {
   render_animation( caller )
   {
@@ -239,11 +266,26 @@ export class Room_Demo extends Room_demo_base
 
     const t = this.t = this.uniforms.animation_time/1000;
 
-    // !!! Draw ground
+    /*************************
+     * Draw ground and walls *
+     *************************/
+
+    // Draw ground
     let floor_transform = Mat4.translation(8, 0, 5).times(Mat4.scale(8, 0.01, 5));
     this.shapes.box.draw( caller, this.uniforms, floor_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
-    //{ ...this.materials.plastic, color: yellow }
 
+    // Draw walls
+    let left_wall_transform = Mat4.translation(2.4, 3.5, -0.1).times(Mat4.scale(2.4, 3.5, 0.1));
+    this.shapes.box.draw(caller, this.uniforms, left_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
+    let right_wall_transform = Mat4.translation(13.6, 3.5, -0.1).times(Mat4.scale(2.4, 3.5, 0.1));
+    this.shapes.box.draw(caller, this.uniforms, right_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
+    let middle_wall_transform = Mat4.translation(8, 6.5, -0.1).times(Mat4.scale(3.2, 0.5, 0.1));
+    this.shapes.box.draw(caller, this.uniforms, middle_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
+
+
+    /******************
+     * Draw furniture *
+     *******************/
 
     // Draw counter
     let counter_transform = Mat4.translation(8, 1, 2).times(Mat4.scale(6, 1, 0.5));
@@ -253,20 +295,10 @@ export class Room_Demo extends Room_demo_base
     this.shapes.box.draw(caller, this.uniforms, end_counter_transform, this.materials.wood);
 
 
-    // Draw walls
-    let left_wall_transform = Mat4.translation(2.8, 3.5, -0.1).times(Mat4.scale(2.8, 3.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, left_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
-    let right_wall_transform = Mat4.translation(13.2, 3.5, -0.1).times(Mat4.scale(2.8, 3.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, right_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
-    let middle_wall_transform = Mat4.translation(8, 6.5, -0.1).times(Mat4.scale(2.4, 0.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, middle_wall_transform, {...this.materials.plastic, color: color(0.5, 0.5, 0.5, 1)});
+    /******************
+     * Draw the robot *
+     ******************/
 
-
-    // Draw spline curve
-    this.curve.draw(caller, this.uniforms);
-
-
-    // Draw the robot
     // Update joints w/ inverse kinematics
     if (this.isAnimating) {
       if (t < this.start_time) {
@@ -291,22 +323,32 @@ export class Room_Demo extends Room_demo_base
     this.robot.draw(caller, this.uniforms, this.materials.steel);
     this.drawJoints(caller);
 
+    // DEBUG: Draw spline curve
+    //this.curve.draw(caller, this.uniforms);
 
-    // Draw the cloths
+
+    /*************************
+     * Draw the robot cloths *
+     *************************/
+
     // Update the cloth simulation
-    let windDir = (Math.floor(t / 4) % 2 === 0) ? vec3(1, 0, -1) : vec3(0, 0, 0);
-    // vec3(0, 0, 10).times(0.5 + 0.5*Math.sin(t/5)); //vec3(0.5, 0, -0.2);
+    let windDir = (Math.floor(t / 4) % 2 === 0) ? vec3(0, 0, -0.5) : vec3(0, 0, 0);
     this.left_cloth_sim.update(this.time_step, windDir);
+    this.middle_cloth_sim.update(this.time_step, windDir);
     this.right_cloth_sim.update(this.time_step, windDir);
 
-    // TODO: Handle collisions w/ robot arm
-    let ee_c = this.robot.getEndEffectorPos();
-    this.left_cloth_sim._handleBallCollision(ee_c, 0.325);
-    this.right_cloth_sim._handleBallCollision(ee_c, 0.325);
+    // Handle collisions w/ robot arm joints
+    const jointPositions = this.robot.getJointPositions()
+    for (const jointPos of jointPositions) {
+      this.left_cloth_sim._handleBallCollision(jointPos, 0.325);
+      this.middle_cloth_sim._handleBallCollision(jointPos, 0.325);
+      this.right_cloth_sim._handleBallCollision(jointPos, 0.325);
+    }
 
+    // Handle collisions w/ robot arm links
     let linkTransforms = this.robot.getLinkTransforms();
     const linkDimensions = [
-      [2, 0.1, 2],
+      [2, 2, 2],
       [1, 0.2, 1],
       [0.2, 2.2, 0.2],
       [0.2, 2.2, 0.2],
@@ -318,6 +360,13 @@ export class Room_Demo extends Room_demo_base
 
       const buffer = 0.3;
       this.left_cloth_sim._handleBoxCollision(
+          c,
+          linkDimensions[i][0] + buffer,
+          linkDimensions[i][1] + buffer,
+          linkDimensions[i][2] + buffer,
+          T
+      );
+      this.middle_cloth_sim._handleBoxCollision(
           c,
           linkDimensions[i][0] + buffer,
           linkDimensions[i][1] + buffer,
@@ -339,6 +388,11 @@ export class Room_Demo extends Room_demo_base
       let c = i % this.left_cloth_sim.m;
       return a[i] = this.left_cloth_sim.particles[r][c].pos;
     });
+    this.shapes.middle_cloth_sheet.arrays.position.forEach( (p, i, a) => {
+      let r = Math.floor(i / this.middle_cloth_sim.m);
+      let c = i % this.middle_cloth_sim.m;
+      return a[i] = this.middle_cloth_sim.particles[r][c].pos;
+    });
     this.shapes.right_cloth_sheet.arrays.position.forEach( (p, i, a) => {
       let r = Math.floor(i / this.right_cloth_sim.m);
       let c = i % this.right_cloth_sim.m;
@@ -347,13 +401,18 @@ export class Room_Demo extends Room_demo_base
 
     // Optionally draw cloth simulation particles
     if(this.isDrawingParticles) {
-      this.left_cloth_sim.draw(caller, this.uniforms, this.shapes, this.materials);
+      this.middle_cloth_sim.draw(caller, this.uniforms, this.shapes, this.materials);
     }
 
     // Draw left cloth
     this.shapes.left_cloth_sheet.flat_shade();
     this.shapes.left_cloth_sheet.draw(caller, this.uniforms, Mat4.identity(), this.materials.blue_fabric);
     this.shapes.left_cloth_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
+
+    // Draw middle cloth
+    this.shapes.middle_cloth_sheet.flat_shade();
+    this.shapes.middle_cloth_sheet.draw(caller, this.uniforms, Mat4.identity(), this.materials.blue_fabric);
+    this.shapes.middle_cloth_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
 
     // Draw right cloth
     this.shapes.right_cloth_sheet.flat_shade();
