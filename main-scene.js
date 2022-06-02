@@ -30,6 +30,7 @@ import {Transforms_Sandbox_Base, Transforms_Sandbox}
 import {Cloth_Demo} from "./cloth_demo.js";
 import {Midpoint_Demo} from "./midpoint_demo.js";
 import {Room_Demo} from "./room_demo.js";
+import {Frenet_Frame} from "./frenet_frame.js";
 
 Object.assign (defs,
     {Minimal_Webgl_Demo},
@@ -44,7 +45,8 @@ Object.assign (defs,
     {Transforms_Sandbox_Base, Transforms_Sandbox},
     {Cloth_Demo},
     {Midpoint_Demo},
-    {Room_Demo}
+    {Room_Demo},
+    {Frenet_Frame}
 );
 
 // ******************** SELECT THE DEMO TO DISPLAY:
