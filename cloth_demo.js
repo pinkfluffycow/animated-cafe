@@ -70,7 +70,7 @@ const Cloth_Demo_Base = defs.Cloth_Demo_Base =
         // Initialize sheet
         const initial_corner_point = offset.plus(0, height, 0);
         const row_operation = (s,p) => p ? p.minus(vec3(0, dy, 0)) : initial_corner_point;
-        const column_operation = (t,p) => p.plus(vec3(dx, 0, 0));
+        const column_operation = (t,p) => p.plus(vec3(0, 0, dx));
         this.shapes.sheet = new defs.Grid_Patch(
             n - 1,
             m - 1,
@@ -159,15 +159,6 @@ export class Cloth_Demo extends Cloth_Demo_Base
       let c = i % this.cloth_sim.m;
       return a[i] = this.cloth_sim.particles[r][c].pos;
     });
-    /*
-    // Update sheet normals
-    let normals = this.cloth.getParticleNormals();
-    this.shapes.sheet.arrays.normal.forEach( (p, i, a) => {
-      let r = Math.floor(i / this.cloth.m);
-      let c = i % this.cloth.m;
-      return a[i] = normals[r][c];
-    });
-     */
 
 
     // Optionally draw cloth simulation particles

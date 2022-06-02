@@ -2,7 +2,7 @@ import {Particle} from "./particle.js";
 import {Spring} from "./spring.js";
 import {tiny} from "./tiny-graphics.js";
 
-const { vec3, color, Mat4 } = tiny;
+const { vec3, vec4, color, Mat4 } = tiny;
 
 export
 const Cloth_Simulation =
@@ -23,27 +23,41 @@ const Cloth_Simulation =
         this.ground_kd = 10;
       }
 
-      initialize(mass, ks, kd) {
-        // Initialize particles in n x m grid from (0, height, 0) to (width, 0, 0)
-        let dx = this.width / (this.m - 1), dy = this.height / (this.n - 1);
+      initialize(mass, ks, kd, orientation="xy") {
+        let dx = 0, dy = 0, dz = 0;
+        switch (orientation) {
+          case "xy":
+            dx = this.width / (this.m - 1);
+            dy = this.height / (this.n - 1);
+            break;
+          case "yz":
+            dy = this.height / (this.n - 1);
+            dz = this.width / (this.m - 1);
+            break;
+        }
+
+        // Given 0 offset, initialize particles in n x m grid from (0, height, 0) to...
+        //     (width, 0, 0) if parallel to xy plane
+        //     (0, 0, width) if parallel to yz plane
         for (let i = 0; i < this.n; ++i) {
           for (let j = 0; j < this.m; ++j) {
             this.particles[i][j] = new Particle(
                 mass,
-                j*dx + this.offset[0], this.height - i*dy + this.offset[1], this.offset[2],
+                j*dx + this.offset[0], this.height - i*dy + this.offset[1], j*dz + this.offset[2],
                 0, 0, 0
             );
           }
         }
 
         // Add springs between immediate neighbor particles.
-        let diag_len = Math.sqrt(dx**2 + dy**2);
-        let diag2_len = 2*Math.sqrt(dx**2 + dy**2);
+        let horiz_len = (orientation === "xy") ? dx : dz;
+        let diag_len = Math.sqrt(dx**2 + dy**2 + dz**2);
+        let diag2_len = 2*Math.sqrt(dx**2 + dy**2 + dz**2);
         for (let i = 0; i < this.n; ++i) {
           for (let j = 0; j < this.m; ++j) {
             // Add structural constraints
-            if (i < this.n - 1) this._add_spring(i, j, i + 1, j, ks, kd, dx);
-            if (j < this.m - 1) this._add_spring(i, j, i, j + 1, ks, kd, dx);
+            if (i < this.n - 1) this._add_spring(i, j, i + 1, j, ks, kd, horiz_len);
+            if (j < this.m - 1) this._add_spring(i, j, i, j + 1, ks, kd, horiz_len);
 
             // Add shear constraints
             if (i < this.n - 1 && j < this.m - 1) {
@@ -52,8 +66,8 @@ const Cloth_Simulation =
             }
 
             // Add bending constraints
-            if (i < this.n - 2) this._add_spring(i, j, i + 2, j, ks, kd, 2*dx);
-            if (j < this.m - 2) this._add_spring(i, j, i, j + 2, ks, kd, 2*dx);
+            if (i < this.n - 2) this._add_spring(i, j, i + 2, j, ks, kd, 2*horiz_len);
+            if (j < this.m - 2) this._add_spring(i, j, i, j + 2, ks, kd, 2*horiz_len);
             if (i < this.n - 2 && j < this.m - 2) {
               this._add_spring(i, j, i + 2, j + 2, ks, kd, diag2_len);
               this._add_spring(i + 2, j, i, j + 2, ks, kd, diag2_len);
@@ -173,6 +187,63 @@ const Cloth_Simulation =
         let normal = this._calculateTriangleNormal(p1, p2, p3);
         let d = normal.normalized();
         return normal.times(d.dot(windDir));
+      }
+
+      _handleBallCollision(c, radius) {
+        for (const row of this.particles) {
+          for (const p of row) {
+            let d = p.pos.minus(c);
+            if (d.norm() < radius) {
+              p.pos.add_by(d.normalized().times(radius - d.norm()));
+            }
+          }
+        }
+      }
+
+      _handleBoxCollision(c, length, height, width, transform) {
+        // length ~ x, height ~ y, width ~ z
+        let i = vec3(transform[0][0], transform[1][0], transform[2][0]).normalized();
+        let j = vec3(transform[0][1], transform[1][1], transform[2][1]).normalized();
+        let k = vec3(transform[0][2], transform[1][2], transform[2][2]).normalized();
+        let inv_rot = new Mat4(
+            [...i, 0],
+            [...j, 0],
+            [...k, 0],
+            [0, 0, 0, 1]
+        );
+
+        c = inv_rot.times(c.to4(0)).to3();
+        let x_lower = c[0] - length/2, x_upper = c[0] + length/2;
+        let y_lower = c[1] - height/2, y_upper = c[1] + height/2;
+        let z_lower = c[2] - width/2, z_upper = c[2] + width/2;
+
+        for (let i = 0; i < this.particles.length; ++i) {
+          for (let j = 0; j < this.particles[0].length; ++j) {
+            let pos = inv_rot.times(this.particles[i][j].pos.to4(0)).to3();
+
+            if ((x_lower < pos[0] && pos[0] < x_upper)
+                && (y_lower < pos[1] && pos[1] < y_upper)
+                && (z_lower < pos[2] && pos[2] < z_upper)) {
+              let dx = (pos[0] < c[0]) ? x_lower - pos[0] : x_upper - pos[0];
+              let dy = (pos[1] < c[1]) ? y_lower - pos[1] : y_upper - pos[1];
+              let dz = (pos[2] < c[2]) ? z_lower - pos[2] : z_upper - pos[2];
+
+              let abs_dx = Math.abs(dx), abs_dy = Math.abs(dy), abs_dz = Math.abs(dz);
+              let update = vec3(0, 0, 0);
+              if (abs_dx <= abs_dy && abs_dx <= abs_dz) {
+                update = vec3(dx, 0, 0);
+              }
+              if (abs_dy <= abs_dx && abs_dy <= abs_dz) {
+                update = vec3(0, dy, 0);
+              }
+              if (abs_dz <= abs_dx && abs_dz <= abs_dy) {
+                update = vec3(0, 0, dz);
+              }
+
+              this.particles[i][j].pos.add_by(inv_rot.transposed().times(update.to4(0)).to3());
+            }
+          }
+        }
       }
 
       draw(webgl_manager, uniforms, shapes, materials) {
