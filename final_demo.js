@@ -28,6 +28,8 @@ const Final_demo_base = defs.Final_demo_base =
           'axis' : new defs.Axis_Arrows(),
           'tri' : new defs.Triangle(),
           'r_cyl': new defs.Rounded_Capped_Cylinder(25, 50),
+          'tall_wall'  : new defs.Cube(),
+          'wide_wall'  : new defs.Cube(),
         };
 
         this.sample_cnt = 0;
@@ -40,6 +42,7 @@ const Final_demo_base = defs.Final_demo_base =
         const basic = new defs.Basic_Shader();
         const phong = new defs.Phong_Shader();
         const tex_phong = new defs.Textured_Phong();
+
         this.materials = {};
         this.materials.plastic = { shader: phong, ambient: .2, diffusivity: 1, specularity: .5, color: color( .9,.5,.9,1 ) }
         this.materials.metal   = {
@@ -72,8 +75,21 @@ const Final_demo_base = defs.Final_demo_base =
         }
         this.materials.wood = {
           shader: tex_phong,
-          ambient: 1.0,
+          ambient: 0.9,
+          specularity: 0,
           texture: new Texture("assets/wood_2048.jpg")
+        }
+        this.materials.wood_planks = {
+          shader: tex_phong,
+          ambient: 0.8,
+          specularity: 0,
+          texture: new Texture("assets/brown_wood_planks.jpg")
+        }
+        this.materials.stone_tile = {
+          shader: tex_phong,
+          ambient: 0.8,
+          specularity: 0,
+          texture: new Texture("assets/stone_tile.jpg")
         }
         this.materials.grass = {
           shader: tex_phong,
@@ -240,6 +256,26 @@ const Final_demo_base = defs.Final_demo_base =
           let c = i % 128;
           return a[i] = vec3(p[0], p[1] + 6 * heights[r][c], p[2]);
         });
+
+
+        /******************************
+         * Modify furniture texcoords *
+         ******************************/
+        // TODO: Modify texture coordinates for furniture
+        this.shapes.box.arrays.texture_coord.forEach(
+            (v, i, l) =>
+                l[i] = vec(v[0] * 4, v[1] * 4)
+        );
+
+        // each tex_coord covers 1.2 units of distance
+        this.shapes.tall_wall.arrays.texture_coord.forEach(
+            (v, i, l) =>
+                l[i] = vec(v[0] * 2, v[1] * 2.9)
+        );
+        this.shapes.wide_wall.arrays.texture_coord.forEach(
+            (v, i, l) =>
+                l[i] = vec(v[0] * 2.67 + 0.2, v[1] * 0.41 - 0.51)
+        );
 
 
         /************************
@@ -517,14 +553,6 @@ const Final_demo_base = defs.Final_demo_base =
             -20.0, 0.0, 20.0
         );
         this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[2].P(t), this.frenet_sample_cnt));
-
-
-
-        // TODO: modify texture coordinates for furniture?
-        this.shapes.box.arrays.texture_coord.forEach(
-            (v, i, l) =>
-                l[i] = vec(v[0] * 4, v[1] * 4)
-        );
       }
 
       render_animation( caller )
@@ -626,25 +654,24 @@ export class Final_Demo extends Final_demo_base
 
     // Draw floor
     let floor_transform = Mat4.translation(10, -0.005, 3.5).times(Mat4.scale(10, 0.01, 9));
-    this.shapes.box.draw(caller, this.uniforms, floor_transform, {...this.materials.plastic, color: gray});
+    this.shapes.box.draw(caller, this.uniforms, floor_transform, {...this.materials.wood_planks});
 
 
     // Draw walls
     let left_wall_transform = Mat4.translation(2.4, 3.5, -0.1).times(Mat4.scale(2.4, 3.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, left_wall_transform, {...this.materials.plastic, color: gray});
-    let right_wall_transform = Mat4.translation(13.6, 3.5, -0.1).times(Mat4.scale(2.4, 3.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, right_wall_transform, {...this.materials.plastic, color: gray});
+    this.shapes.tall_wall.draw(caller, this.uniforms, left_wall_transform, {...this.materials.stone_tile});
     let middle_wall_transform = Mat4.translation(8, 6.5, -0.1).times(Mat4.scale(3.2, 0.5, 0.1));
-    this.shapes.box.draw(caller, this.uniforms, middle_wall_transform, {...this.materials.plastic, color: gray});
+    this.shapes.wide_wall.draw(caller, this.uniforms, middle_wall_transform, {...this.materials.stone_tile});
+    let right_wall_transform = Mat4.translation(13.6, 3.5, -0.1).times(Mat4.scale(2.4, 3.5, 0.1));
+    this.shapes.tall_wall.draw(caller, this.uniforms, right_wall_transform, {...this.materials.stone_tile});
 
     let back_wall_transform = Mat4.translation(-0.01, 3.5, 3.5).times(Mat4.scale(0.01, 3.5, 9));
     this.shapes.box.draw(caller, this.uniforms, back_wall_transform, {...this.materials.plastic, color: gray});
 
     let side_wall_transform = Mat4.translation(8, 3.5, -5.6).times(Mat4.scale(8, 3.5, 0.1));
     this.shapes.box.draw(caller, this.uniforms, side_wall_transform, {...this.materials.plastic, color: gray});
-    let front_wall_transform = Mat4.translation(16, 3.5, -2.75).times(Mat4.scale(0.1, 3.5, 2.75));
-    this.shapes.box.draw(caller, this.uniforms, front_wall_transform, {...this.materials.plastic, color: gray});
-
+    let front_wall_transform = Mat4.translation(15.9, 3.5, -2.85).times(Mat4.scale(0.1, 3.5, 2.65));
+    this.shapes.tall_wall.draw(caller, this.uniforms, front_wall_transform, {...this.materials.stone_tile, ambient: 0.5});
 
     // Draw roof
     let roof_transform = Mat4.translation(10, 7.005, 3.5).times(Mat4.scale(10, 0.01, 9));
@@ -724,10 +751,10 @@ export class Final_Demo extends Final_demo_base
      *************************/
 
     // Update the cloth simulation
-    let windDir = (Math.floor(t / 4) % 2 === 0) ? vec3(1, 0, 1) : vec3(0, 0, 0);
-    this.left_cloth_sim.update(this.time_step, windDir.times(0.5));
-    this.middle_cloth_sim.update(this.time_step, windDir.times(0.5));
-    this.right_cloth_sim.update(this.time_step, windDir.times(0.5));
+    let windDir = (Math.floor(t / 4) % 2 === 0) ? vec3(1, 0, -0.8) : vec3(0, 0, 0);
+    this.left_cloth_sim.update(this.time_step, windDir.times(0.8));
+    this.middle_cloth_sim.update(this.time_step, windDir.times(0.8));
+    this.right_cloth_sim.update(this.time_step, windDir.times(0.8));
 
     // Handle collisions w/ robot arm joints
     const jointPositions = this.robot.getJointPositions()
@@ -829,9 +856,15 @@ export class Final_Demo extends Final_demo_base
     }
 
 
-    /*********************
-     * Draw the curtains *
-     *********************/
+    /************************************
+     *                                  *
+     *     Draw transparent objects     *
+     *                                  *
+     ************************************/
+
+    /********************
+     * Draw yz curtains *
+     ********************/
 
     // Update the cloth simulation
     this.yz_curtain_sim.update(this.time_step, windDir);
@@ -845,11 +878,11 @@ export class Final_Demo extends Final_demo_base
 
     // Draw the yz curtains (1.5, 4, 6.5)
     let yz_curtain_translations = [
-      vec3(18.5, 0, -1),
-      vec3(18.5, 0, 1.5),
-      vec3(18.5, 0, 4),
-      vec3(18.5, 0, 6.5),
-      vec3(18.5, 0, 9)
+      //vec3(18.5, 0, -2),
+      vec3(18.5, 0, 0.5),
+      vec3(18.5, 0, 3),
+      vec3(18.5, 0, 5.5),
+      vec3(18.5, 0, 8)
     ];
     for (const translation of yz_curtain_translations) {
       this.shapes.yz_curtain_sheet.draw(caller, this.uniforms, Mat4.translation(...translation), this.materials.beige_fabric);
@@ -857,7 +890,10 @@ export class Final_Demo extends Final_demo_base
     this.shapes.yz_curtain_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
 
 
-    /*
+    /********************
+     * Draw xy curtains *
+     ********************/
+
     // Update the cloth simulation
     this.xy_curtain_sim.update(this.time_step, windDir);
 
@@ -870,15 +906,21 @@ export class Final_Demo extends Final_demo_base
 
     // Draw the xy curtains
     let xy_curtain_translations = [
-      vec3(4.5, 0, 10.5),
-      vec3(7, 0, 10.5),
-      vec3(9.5, 0, 10.5)
+      vec3(15.5, 0, 11)
     ];
     for (const translation of xy_curtain_translations) {
       this.shapes.xy_curtain_sheet.draw(caller, this.uniforms, Mat4.translation(...translation), this.materials.beige_fabric);
     }
     this.shapes.xy_curtain_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
-    */
+
+
+    /***************
+     * Draw window *
+     ***************/
+
+    const window_color = color(0.8, 0.8, 1, 0.2);
+    let window_transform = Mat4.translation(7.005, 3.5, 11.5).times(Mat4.scale(7, 3.5, 0.05));
+    this.shapes.box.draw(caller, this.uniforms, window_transform, {...this.materials.plastic, ambient: 0.8, color: window_color});
   }
 
   drawJoints(caller) {
