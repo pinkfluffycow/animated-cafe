@@ -282,24 +282,40 @@ const Final_demo_base = defs.Final_demo_base =
          * Initialize spline(s) *
          ************************/
 
-        // Initialize spline
-        this.spline = new Hermite_Spline();
-        const control_points = [
+        // Initialize reach-right spline
+        this.right_spline = new Hermite_Spline();
+        const right_control_points = [
             [8, 4.25, -0.5,
                 0, 0, 5],
             [5, 2.25, 2.25,
                 -10, 0, 0]
         ];
-        for (const p of control_points) {
-          this.spline.add_point(...p);
+        for (const p of right_control_points) {
+          this.right_spline.add_point(...p);
         }
-        this.spline_len = this.spline.get_arc_length();
-        this.spline.constructArcLengthMap(1000);
+        this.right_spline_len = this.right_spline.get_arc_length();
+        this.right_spline.constructArcLengthMap(1000);
         this.prev_u = 0;
+
+
+        // Initialize reach-left spline
+        this.left_spline = new Hermite_Spline();
+        const left_control_points = [
+          [8, 4.25, -0.5,
+            0, 0, 5],
+          [11, 2.25, 2.25,
+            10, 0, 0]
+        ];
+        for (const p of left_control_points) {
+          this.left_spline.add_point(...p);
+        }
+        this.left_spline_len = this.left_spline.get_arc_length();
+        this.left_spline.constructArcLengthMap(1000);
+        this.left_prev_u = 0;
 
         // Initialize curve
         this.sample_cnt = 100;
-        const curve_fn = (t) => this.spline.get_position(t);
+        const curve_fn = (t) => this.left_spline.get_position(t);
         this.curve = new Curve_Shape(curve_fn, this.sample_cnt);
 
 
@@ -311,9 +327,11 @@ const Final_demo_base = defs.Final_demo_base =
         this.robot = new Articulated_Body();
         this.isAnimating = false;
         this.rest_pos = this.robot.getEndEffectorPos();
-        this.start_pos = vec3(control_points[0][0], control_points[0][1], control_points[0][2]);
+        this.start_pos = vec3(right_control_points[0][0], right_control_points[0][1], right_control_points[0][2]);
         this.start_time = this.wait_time = 0.2;
+
         this.anim_t = 0;
+        this.reach_dir = 0;
 
         this.ball_radius = 0.2;
 
@@ -707,10 +725,11 @@ export class Final_Demo extends Final_demo_base
         this.robot.updateJoints(goal_pos);
       } else {
         let animation_t = 0.5 - 0.5 * Math.cos(this.anim_t / 2);
-        let s = animation_t * this.spline_len;
-            //2*(t - this.start_time) % this.spline_len;
-        let u = this.spline.get_next_u(s, this.prev_u);
-        let goal_pos = this.spline.get_position(u);
+
+        let s = animation_t * this.right_spline_len;
+        let u = this.right_spline.get_next_u(s, this.prev_u);
+        let goal_pos = (this.reach_dir === 0) ? this.right_spline.get_position(u) : this.left_spline.get_position(u);
+
         this.robot.updateJoints(goal_pos);
         this.prev_u = u;
       }
@@ -718,25 +737,6 @@ export class Final_Demo extends Final_demo_base
       this.anim_t = 0;
       this.rest_pos = this.robot.getEndEffectorPos();
     }
-
-    /*if (this.isAnimating) {
-      if (t < this.start_time) {
-        let goal_pos = this.rest_pos
-            .plus((this.start_pos.minus(this.rest_pos)).times(1 - ((this.start_time - t) / this.wait_time)));
-        this.robot.updateJoints(goal_pos);
-      } else {
-        let animation_t = 0.5 - 0.5 * Math.cos((t - this.start_time) / 2);
-        let s = animation_t * this.spline_len;
-            //2*(t - this.start_time) % this.spline_len;
-        let u = this.spline.get_next_u(s, this.prev_u);
-        let goal_pos = this.spline.get_position(u);
-        this.robot.updateJoints(goal_pos);
-        this.prev_u = u;
-      }
-    } else {
-      this.start_time = t + this.wait_time;
-      this.rest_pos = this.robot.getEndEffectorPos();
-    }*/
 
     // Draw the articulated robot arm
     this.robot.draw(caller, this.uniforms, this.materials.steel);
@@ -980,8 +980,8 @@ export class Final_Demo extends Final_demo_base
     );
     this.new_line();*/
 
-    this.key_triggered_button( "Toggle robot animation", [ "Shift", "A" ],
-        () => this.isAnimating = !this.isAnimating
+    this.key_triggered_button( "Debug camera", [ "Shift", "D" ],
+        () => Shader.assign_camera(Mat4.look_at(vec3 (15, 8, 20), vec3 (5, 5, 0), vec3 (0, 1, 0)), this.uniforms)
     );
     this.new_line();
 
@@ -1000,8 +1000,13 @@ export class Final_Demo extends Final_demo_base
     );
     this.new_line();
 
-    this.key_triggered_button( "Debug camera", [ "Shift", "D" ],
-        () => Shader.assign_camera(Mat4.look_at(vec3 (15, 8, 20), vec3 (5, 5, 0), vec3 (0, 1, 0)), this.uniforms)
+    this.key_triggered_button( "Toggle robot animation", [ "Shift", "A" ],
+        () => this.isAnimating = !this.isAnimating
+    );
+    this.new_line();
+
+    this.key_triggered_button( "Toggle robot reach direction", [ "Shift", "R" ],
+        () => this.reach_dir = 1 - this.reach_dir
     );
     this.new_line();
   }
