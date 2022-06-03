@@ -196,6 +196,12 @@ const Final_demo_base = defs.Final_demo_base =
                 l[i] = vec(v[0] * 4, v[1] * 4)
         );
 
+        // Initialize Birds
+        this.birds = []
+        for(let i = 0; i < 5; i++) {
+            this.birds.push(new Bird());
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////
         //Frenet Frame stuff
         this.frenet_sample_cnt = 1000;
@@ -470,16 +476,16 @@ export class Final_Demo extends Final_demo_base
     // let p = this.flyingObj[0].P(0);
     // let pM = Mat4.translation(p[0],p[1],p[2]);
     // this.shapes.axis.draw(caller, this.uniforms, pM, this.materials.metal);
-    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[0].draw(caller, this.uniforms);
-    // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[1].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    this.birds[0].draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
+    // this.flyingCurves[0].draw(caller, this.uniforms);
+    // this.birds[1].draw(caller, this.uniforms, this.flyingObj[1].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
     // this.flyingCurves[1].draw(caller, this.uniforms);
-    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[2].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[2].draw(caller, this.uniforms);
-    // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[3].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    this.birds[2].draw(caller, this.uniforms, this.flyingObj[2].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
+    // this.flyingCurves[2].draw(caller, this.uniforms);
+    // this.birds[3].draw(caller, this.uniforms, this.flyingObj[3].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
     // this.flyingCurves[3].draw(caller, this.uniforms);
-    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[4].draw(caller, this.uniforms);
+    this.birds[4].draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
+    // this.flyingCurves[4].draw(caller, this.uniforms);
   }
 
   drawJoints(caller) {

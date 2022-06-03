@@ -74,8 +74,12 @@ class Bird {
         this.eye_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(0, 0, 0, 1) };
     }
 
-    draw(webgl_manager, uniforms, material) {
+    draw(webgl_manager, uniforms, location, material) {
         this.matrix_stack = [];
+        let rot_mat = Mat4.rotation(.5 * Math.PI, 0, 1, 0);
+        rot_mat.pre_multiply(Mat4.scale(2, 2, 2));
+        rot_mat.pre_multiply(location);
+        this.root.location_matrix = rot_mat;
         this._rec_draw(this.root, Mat4.identity(), webgl_manager, uniforms, material);
     }
     
