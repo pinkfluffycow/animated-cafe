@@ -71,8 +71,27 @@ class Bird {
         this.r_shoulder = new Joint("r_shoulder", this.base_node, this.r_wing_node, r_shoulder_location);
         this.base_node.children_arcs.push(this.r_shoulder);
 
+        // left foot node
+        let l_foot_transform = Mat4.scale(0.02, 0.02, 0.13);
+        this.l_foot_node = new Link("l_foot", shapes.box, l_foot_transform);
+        // torso->l_hip->l_foot
+        const l_hip_location = Mat4.rotation(-.25 * Math.PI, 1, 0, 0);
+        l_hip_location.pre_multiply(Mat4.translation(-.1, -.08, -.2));
+        this.l_hip = new Joint("l_hip", this.base_node, this.l_foot_node, l_hip_location);
+        this.base_node.children_arcs.push(this.l_hip);
+
+        // right foot node
+        let r_foot_transform = Mat4.scale(0.02, 0.02, 0.13);
+        this.r_foot_node = new Link("r_foot", shapes.box, r_foot_transform);
+        // torso->r_hip->r_foot
+        const r_hip_location = Mat4.rotation(-.25 * Math.PI, 1, 0, 0);
+        r_hip_location.pre_multiply(Mat4.translation(.1, -.08, -.2));
+        this.r_hip = new Joint("r_hip", this.base_node, this.r_foot_node, r_hip_location);
+        this.base_node.children_arcs.push(this.r_hip);
+
         this.eye_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(0, 0, 0, 1) };
         this.beak_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(.7, .35, 0, 1) };
+        this.foot_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(1, .6, 0, 1) };
     }
 
     flap_wings(t) {
@@ -104,6 +123,9 @@ class Bird {
             }
             else if(node === this.beak_node) {
               node.shape.draw(webgl_manager, uniforms, matrix, this.beak_mat);
+            }
+            else if(node === this.l_foot_node || node === this.r_foot_node) {
+              node.shape.draw(webgl_manager, uniforms, matrix, this.foot_mat);
             }
             else {
               node.shape.draw(webgl_manager, uniforms, matrix, material);

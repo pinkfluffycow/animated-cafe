@@ -492,9 +492,6 @@ export class Final_Demo extends Final_demo_base
     for(let i = 0; i < 5; i++) {
         this.birds[i].flap_wings(t + i);
     }
-
-    this.bird.draw(caller, this.uniforms, Mat4.translation(8, 4, 5), {...this.materials.plastic, color: color(1, 1, 0, 1)});
-    this.bird.flap_wings(t);
   }
 
   drawJoints(caller) {
