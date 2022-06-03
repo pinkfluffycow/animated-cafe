@@ -4,6 +4,7 @@ import {Articulated_Body} from "./articulated_body.js";
 import {Cloth_Simulation} from "./cloth_simulation.js";
 import {Frenet_Spline} from './frenet_frame.js';
 import {Bird} from "./bird.js";
+import {Tree} from "./tree.js";
 
 // Pull these names into this module's scope for convenience:
 const { vec, vec3, vec4, color, Mat4, Shader, Texture, Component } = tiny;
@@ -204,6 +205,13 @@ const Final_demo_base = defs.Final_demo_base =
             this.birds.push(new Bird());
         }
         this.bird = new Bird();
+
+        // Initialize Trees
+        this.trees = []
+        this.tree_locations = [Mat4.translation(-4, 0, 5), Mat4.translation(20, 0, 5)];
+        for(let i = 0; i < this.tree_locations.length; i++) {
+          this.trees.push(new Tree());
+        }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
         //Frenet Frame stuff
@@ -490,8 +498,12 @@ export class Final_Demo extends Final_demo_base
     this.birds[4].draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
     // this.flyingCurves[4].draw(caller, this.uniforms);
 
-    for(let i = 0; i < 5; i++) {
+    for(let i = 0; i < this.birds.length; i++) {
         this.birds[i].flap_wings(t + i);
+    }
+
+    for(let i = 0; i < this.tree_locations.length; i++) {
+      this.trees[i].draw(caller, this.uniforms, this.tree_locations[i]);
     }
 
     this.drawStools(caller);
