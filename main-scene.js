@@ -29,7 +29,7 @@ import {Transforms_Sandbox_Base, Transforms_Sandbox}
                     from "./examples/transforms-sandbox.js";
 import {Cloth_Demo} from "./cloth_demo.js";
 import {Midpoint_Demo} from "./midpoint_demo.js";
-import {Frenet_Frame} from "./frenet_frame.js";
+import {Frenet_Frame} from "./frenetframe_demo.js";
 import {Final_Demo} from "./final_demo.js";
 
 Object.assign (defs,

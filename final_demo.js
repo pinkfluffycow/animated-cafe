@@ -2,6 +2,7 @@ import {tiny, defs} from './examples/common.js';
 import {Hermite_Spline, Curve_Shape} from "./spline.js";
 import {Articulated_Body} from "./articulated_body.js";
 import {Cloth_Simulation} from "./cloth_simulation.js";
+import {Frenet_Spline} from './frenet_frame.js';
 
 // Pull these names into this module's scope for convenience:
 const { vec, vec3, vec4, color, Mat4, Shader, Texture, Component } = tiny;
@@ -22,7 +23,8 @@ const Final_demo_base = defs.Final_demo_base =
         this.shapes = {
           'box'  : new defs.Cube(),
           'ball' : new defs.Subdivision_Sphere(4),
-          'axis' : new defs.Axis_Arrows()
+          'axis' : new defs.Axis_Arrows(),
+          'tri' : new defs.Triangle()
         };
 
         this.sample_cnt = 0;
@@ -192,6 +194,48 @@ const Final_demo_base = defs.Final_demo_base =
             (v, i, l) =>
                 l[i] = vec(v[0] * 4, v[1] * 4)
         );
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        //Frenet Frame stuff
+        this.frenet_sample_cnt = 1000;
+        this.flyingObj = [];
+        this.flyingCurves = [];
+
+        this.flyingObj.push(new Frenet_Spline());
+        this.flyingObj.push(new Frenet_Spline());
+        this.flyingObj.push(new Frenet_Spline());
+        this.flyingObj.push(new Frenet_Spline());
+        this.flyingObj.push(new Frenet_Spline());
+
+        this.flyingObj[0].add_point(-5.0, 8.0, -5.0, -20.0, 0.0, 20.0);
+        this.flyingObj[0].add_point(21.0, 8.0, 15.0, 20.0, 0.0, -20.0);
+        this.flyingObj[0].add_point(-5.0, 8.0, -5.0, -20.0, 0.0, 20.0);
+        this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[0].P(t), this.frenet_sample_cnt));
+
+        this.flyingObj[1].obj_t = 200;
+        this.flyingObj[1].add_point(21.0, 15.0, -5.0, -20.0, 0.0, -20.0);
+        this.flyingObj[1].add_point(-5.0, 8.0, 15.0, 20.0, 0.0, 20.0);
+        this.flyingObj[1].add_point(21.0, 15.0, -5.0, -20.0, 0.0, -20.0);
+        this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[1].P(t), this.frenet_sample_cnt));
+
+        this.flyingObj[2].obj_t = 400;
+        this.flyingObj[2].add_point(21.0, 11.0, -5.0, -20.0, 0.0, -20.0);
+        this.flyingObj[2].add_point(-5.0, 11.0, 15.0, 20.0, 0.0, 20.0);
+        this.flyingObj[2].add_point(21.0, 11.0, -5.0, -20.0, 0.0, -20.0);
+        this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[2].P(t), this.frenet_sample_cnt));
+
+        this.flyingObj[3].obj_t = 600;
+        this.flyingObj[3].add_point(-5.0, 15.0, -5.0, -20.0, 0.0, 20.0);
+        this.flyingObj[3].add_point(21.0, 8.0, 15.0, 20.0, 0.0, -20.0);
+        this.flyingObj[3].add_point(-5.0, 15.0, -5.0, -20.0, 0.0, 20.0);
+        this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[3].P(t), this.frenet_sample_cnt));
+
+        this.flyingObj[4].add_point(0, 15.0, 0, -20.0, 0.0, 20.0);
+        this.flyingObj[4].add_point(0, 15.0, 10.0, 20.0, 0.0, 20.0);
+        this.flyingObj[4].add_point(16.0, 15.0, 10.0, 20.0, 0.0, -20.0);
+        this.flyingObj[4].add_point(16.0, 15.0, 0, -20.0, 0.0, -20.0);
+        this.flyingObj[4].add_point(0, 15.0, 0, -20.0, 0.0, 20.0);
+        this.flyingCurves.push(new Curve_Shape((t) => this.flyingObj[4].P(t), this.frenet_sample_cnt));
       }
 
       render_animation( caller )
@@ -418,6 +462,23 @@ export class Final_Demo extends Final_demo_base
     this.shapes.right_cloth_sheet.flat_shade();
     this.shapes.right_cloth_sheet.draw(caller, this.uniforms, Mat4.identity(), this.materials.blue_fabric);
     this.shapes.right_cloth_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
+
+    /**********************************
+      Draw Splines and Flying objects
+    **********************************/
+    // let p = this.flyingObj[0].P(0);
+    // let pM = Mat4.translation(p[0],p[1],p[2]);
+    // this.shapes.axis.draw(caller, this.uniforms, pM, this.materials.metal);
+    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    this.flyingCurves[0].draw(caller, this.uniforms);
+    // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[1].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    // this.flyingCurves[1].draw(caller, this.uniforms);
+    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[2].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    this.flyingCurves[2].draw(caller, this.uniforms);
+    // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[3].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    // this.flyingCurves[3].draw(caller, this.uniforms);
+    this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
+    this.flyingCurves[4].draw(caller, this.uniforms);
   }
 
   drawJoints(caller) {
