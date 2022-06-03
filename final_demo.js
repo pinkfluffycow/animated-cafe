@@ -284,7 +284,7 @@ export class Final_Demo extends Final_demo_base
 
 
     /******************
-     * Draw furniture *
+     * Draw scene *
      *******************/
 
     // Draw counter
