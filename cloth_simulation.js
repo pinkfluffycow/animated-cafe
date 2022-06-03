@@ -9,7 +9,7 @@ const Cloth_Simulation =
     // Cloth implementation largely based on Jesper Mosegaards's tutorial at
     // https://viscomp.alexandra.dk/index2fa7.html?p=147
     class Cloth_Simulation {
-      constructor(width, height, n, m, offset) {
+      constructor(width, height, n, m, offset, gravity=9.8) {
         this.width = width;
         this.height = height;
         this.n = n;
@@ -18,7 +18,7 @@ const Cloth_Simulation =
 
         this.particles = [...Array(n)].map(() => Array(m)); // initialize n x m array
         this.springs = [];
-        this.g_acc = vec3(0, -9.8, 0);
+        this.g_acc = vec3(0, -1 * gravity, 0);
         this.ground_ks = 500;
         this.ground_kd = 10;
       }
@@ -82,7 +82,7 @@ const Cloth_Simulation =
       }
 
       // Update using fast method described in Mosegaards tutorial
-      update(dt, windDir) {
+      update(dt, windDir=null) {
         // Satisfy constraints for several iterations
         const CONSTRAINT_ITERATIONS = 15;
         for (let i = 0; i < CONSTRAINT_ITERATIONS; ++i) {
@@ -138,7 +138,7 @@ const Cloth_Simulation =
         }
 
         // Apply wind forces per triangle
-        this._applyWindForce(dt, windDir);
+        if(windDir) this._applyWindForce(dt, windDir);
       }
 
       _calculate_ground_force(p) {
@@ -304,5 +304,73 @@ const Cloth_Simulation =
         }
 
         return normals;
+      }
+
+      _handleBoxCollision2(c, length, height, width, transform) {
+        // length ~ x, height ~ y, width ~ z
+        let i = vec3(transform[0][0], transform[1][0], transform[2][0]).normalized();
+        let j = vec3(transform[0][1], transform[1][1], transform[2][1]).normalized();
+        let k = vec3(transform[0][2], transform[1][2], transform[2][2]).normalized();
+        let inv_rot = new Mat4(
+            [...i, 0],
+            [...j, 0],
+            [...k, 0],
+            [0, 0, 0, 1]
+        );
+
+        let x_lower = c[0] - length/2, x_upper = c[0] + length/2;
+        let y_lower = c[1] - height/2, y_upper = c[1] + height/2;
+        let z_lower = c[2] - width/2, z_upper = c[2] + width/2;
+
+        let particle_normals = this.getParticleNormals();
+
+        for (let i = 0; i < this.particles.length; ++i) {
+          for (let j = 0; j < this.particles[0].length; ++j) {
+            let pos = inv_rot.times(this.particles[i][j].pos.to4(0)).to3();
+
+            if ((x_lower < pos[0] && pos[0] < x_upper)
+                && (y_lower < pos[1] && pos[1] < y_upper)
+                && (z_lower < pos[2] && pos[2] < z_upper)) {
+              let n = particle_normals[i][j];
+
+              let pos_err = Array(3).fill(Number.MAX_SAFE_INTEGER);
+              let neg_err = Array(3).fill(Number.MAX_SAFE_INTEGER);
+
+              let dx = [x_lower - pos[0], x_upper - pos[0]];
+              let dy = [y_lower - pos[1], y_upper - pos[1]];
+              let dz = [z_lower - pos[2], z_upper - pos[2]];
+
+              if (n[0] > 0) {
+                pos_err[0] = dx[1] / n[0];
+                neg_err[0] = -1 * dx[0] / n[0];
+              } else if (n[0] < 0) {
+                pos_err[0] = dx[0] / n[0];
+                neg_err[0] = -1 * dx[1] / n[0];
+              }
+
+              if (n[1] > 0) {
+                pos_err[1] = dy[1] / n[1];
+                neg_err[1] = -1 * dy[0] / n[1];
+              } else if (n[1] < 0) {
+                pos_err[1] = dy[0] / n[1];
+                neg_err[1] = -1 * dy[1] / n[1];
+              }
+
+              if (n[2] > 0) {
+                pos_err[2] = dz[1] / n[2];
+                neg_err[2] = -1 * dz[0] / n[2];
+              } else if (n[2] < 0) {
+                pos_err[2] = dz[0] / n[2];
+                neg_err[2] = -1 * dz[1] / n[2];
+              }
+
+              let pos_fac = Math.min(...pos_err);
+              let neg_fac = Math.min(...neg_err);
+
+              let update = (pos_fac < neg_fac) ? n.times(pos_fac) : n.times(-1 * neg_fac);
+              this.particles[i][j].pos.add_by(inv_rot.transposed().times(update.to4(0)).to3());
+            }
+          }
+        }
       }
     };
