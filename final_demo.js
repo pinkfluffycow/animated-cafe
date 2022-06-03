@@ -25,7 +25,8 @@ const Final_demo_base = defs.Final_demo_base =
           'box'  : new defs.Cube(),
           'ball' : new defs.Subdivision_Sphere(4),
           'axis' : new defs.Axis_Arrows(),
-          'tri' : new defs.Triangle()
+          'tri' : new defs.Triangle(),
+          'r_cyl': new defs.Rounded_Capped_Cylinder(25, 50),
         };
 
         this.sample_cnt = 0;
@@ -470,16 +471,26 @@ export class Final_Demo extends Final_demo_base
     // let p = this.flyingObj[0].P(0);
     // let pM = Mat4.translation(p[0],p[1],p[2]);
     // this.shapes.axis.draw(caller, this.uniforms, pM, this.materials.metal);
+    
     this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[0].draw(caller, this.uniforms);
+    //this.flyingCurves[0].draw(caller, this.uniforms);
+    
     // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[1].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
     // this.flyingCurves[1].draw(caller, this.uniforms);
+   
     this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[2].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[2].draw(caller, this.uniforms);
+    //this.flyingCurves[2].draw(caller, this.uniforms);
+    
     // this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[3].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
     // this.flyingCurves[3].draw(caller, this.uniforms);
+    
     this.shapes.axis.draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), this.materials.metal);
-    this.flyingCurves[4].draw(caller, this.uniforms);
+    //this.flyingCurves[4].draw(caller, this.uniforms);
+
+    /**********
+      Stools
+    **********/
+    this.drawStools(caller);
   }
 
   drawJoints(caller) {
@@ -494,6 +505,35 @@ export class Final_Demo extends Final_demo_base
           .times(Mat4.scale(this.ball_radius, this.ball_radius, this.ball_radius));
       this.shapes.ball.draw(caller, this.uniforms, ball_transform, {...this.materials.plastic, color: blue})
     }
+  }
+
+  drawStools(caller){
+    let seat = Mat4.translation(4,1.5,4).times(Mat4.scale(.8,.2,.8)).times(Mat4.rotation(Math.PI/2,1,0,0)).times(Mat4.rotation(Math.sin(this.t),0,0,1));
+    let cushion = Mat4.translation(4,1.6,4).times(Mat4.scale(.7,.1,.7)).times(Mat4.rotation(Math.PI/2,1,0,0)).times(Mat4.rotation(Math.sin(this.t),0,0,1));
+    let leg = Mat4.translation(4,.7,4).times(Mat4.scale(.1,1.5,.1)).times(Mat4.rotation(Math.PI/2,1,0,0));
+    let base = Mat4.translation(4,.04,4).times(Mat4.scale(.7,.05,.7)).times(Mat4.rotation(Math.PI/2,1,0,0));
+    this.shapes.r_cyl.draw(caller, this.uniforms, seat, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, cushion, this.materials.blue_fabric);
+    this.shapes.r_cyl.draw(caller, this.uniforms, leg, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, base, this.materials.metal);
+
+    seat = Mat4.translation(4,0,0).times(seat);
+    cushion = Mat4.translation(4,0,0).times(cushion);
+    leg = Mat4.translation(4,0,0).times(leg);
+    base = Mat4.translation(4,0,0).times(base);
+    this.shapes.r_cyl.draw(caller, this.uniforms, seat, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, cushion, this.materials.blue_fabric);
+    this.shapes.r_cyl.draw(caller, this.uniforms, leg, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, base, this.materials.metal);
+
+    seat = Mat4.translation(4,0,0).times(seat);
+    cushion = Mat4.translation(4,0,0).times(cushion);
+    leg = Mat4.translation(4,0,0).times(leg);
+    base = Mat4.translation(4,0,0).times(base);
+    this.shapes.r_cyl.draw(caller, this.uniforms, seat, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, cushion, this.materials.blue_fabric);
+    this.shapes.r_cyl.draw(caller, this.uniforms, leg, this.materials.metal);
+    this.shapes.r_cyl.draw(caller, this.uniforms, base, this.materials.metal);
   }
 
   // Sets up a panel of interactive HTML elements, including
