@@ -72,6 +72,7 @@ class Bird {
         this.base_node.children_arcs.push(this.r_shoulder);
 
         this.eye_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(0, 0, 0, 1) };
+        this.beak_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(.7, .35, 0, 1) };
     }
 
     flap_wings(t) {
@@ -100,6 +101,9 @@ class Bird {
             matrix.post_multiply(T);
             if(node === this.l_eye_node || node === this.r_eye_node) {
               node.shape.draw(webgl_manager, uniforms, matrix, this.eye_mat);
+            }
+            else if(node === this.beak_node) {
+              node.shape.draw(webgl_manager, uniforms, matrix, this.beak_mat);
             }
             else {
               node.shape.draw(webgl_manager, uniforms, matrix, material);
