@@ -54,24 +54,29 @@ class Bird {
         // left wing node
         let l_wing_transform = Mat4.rotation(-.5 * Math.PI, 0, 1, 0)
         l_wing_transform.pre_multiply(Mat4.scale(.3, .03, .15));
-        l_wing_transform.pre_multiply(Mat4.translation(-.2, 0, 0));
+        l_wing_transform.pre_multiply(Mat4.translation(-.3, 0, 0));
         this.l_wing_node = new Link("l_wing", shapes.cone, l_wing_transform);
         // torso->l_shoulder->l_wing
-        const l_shoulder_location = Mat4.translation(-.2, .1, 0);
+        const l_shoulder_location = Mat4.translation(-.1, .1, 0);
         this.l_shoulder = new Joint("l_shoulder", this.base_node, this.l_wing_node, l_shoulder_location);
         this.base_node.children_arcs.push(this.l_shoulder);
 
         // right wing node
         let r_wing_transform = Mat4.rotation(.5 * Math.PI, 0, 1, 0);
         r_wing_transform.pre_multiply(Mat4.scale(.3, .03, .15));
-        r_wing_transform.pre_multiply(Mat4.translation(.2, 0, 0));
+        r_wing_transform.pre_multiply(Mat4.translation(.3, 0, 0));
         this.r_wing_node = new Link("r_wing", shapes.cone, r_wing_transform);
         // torso->r_shoulder->r_wing
-        const r_shoulder_location = Mat4.translation(.2, .1, 0);
+        const r_shoulder_location = Mat4.translation(.1, .1, 0);
         this.r_shoulder = new Joint("r_shoulder", this.base_node, this.r_wing_node, r_shoulder_location);
         this.base_node.children_arcs.push(this.r_shoulder);
 
         this.eye_mat = { shader: new defs.Phong_Shader(), ambient: .2, diffusivity: 1, specularity: .5, color: color(0, 0, 0, 1) };
+    }
+
+    flap_wings(t) {
+      this.l_shoulder.articulation_matrix = Mat4.rotation(Math.sin(t*4) / 4 * Math.PI, 0, 0, 1);
+      this.r_shoulder.articulation_matrix = Mat4.rotation(-Math.sin(t*4) / 4 * Math.PI, 0, 0, 1);
     }
 
     draw(webgl_manager, uniforms, location, material) {

@@ -73,6 +73,7 @@ const Final_demo_base = defs.Final_demo_base =
           ambient: 1.0,
           texture: new Texture("assets/wood_2048.jpg")
         }
+        this.materials.bird = {shader: phong, ambient: .2, diffusivity: 1, specularity: .5, color: color(1, 1, 0, 1)};
 
 
         // Initialize spline
@@ -201,6 +202,7 @@ const Final_demo_base = defs.Final_demo_base =
         for(let i = 0; i < 5; i++) {
             this.birds.push(new Bird());
         }
+        this.bird = new Bird();
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
         //Frenet Frame stuff
@@ -476,7 +478,7 @@ export class Final_Demo extends Final_demo_base
     // let p = this.flyingObj[0].P(0);
     // let pM = Mat4.translation(p[0],p[1],p[2]);
     // this.shapes.axis.draw(caller, this.uniforms, pM, this.materials.metal);
-    this.birds[0].draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
+    this.birds[0].draw(caller, this.uniforms, this.flyingObj[0].getArticulationMatrix(this.frenet_sample_cnt), this.materials.bird);
     // this.flyingCurves[0].draw(caller, this.uniforms);
     // this.birds[1].draw(caller, this.uniforms, this.flyingObj[1].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
     // this.flyingCurves[1].draw(caller, this.uniforms);
@@ -486,6 +488,13 @@ export class Final_Demo extends Final_demo_base
     // this.flyingCurves[3].draw(caller, this.uniforms);
     this.birds[4].draw(caller, this.uniforms, this.flyingObj[4].getArticulationMatrix(this.frenet_sample_cnt), {...this.materials.plastic, color: color(1, 1, 0, 1)});
     // this.flyingCurves[4].draw(caller, this.uniforms);
+
+    for(let i = 0; i < 5; i++) {
+        this.birds[i].flap_wings(t + i);
+    }
+
+    this.bird.draw(caller, this.uniforms, Mat4.translation(8, 4, 5), {...this.materials.plastic, color: color(1, 1, 0, 1)});
+    this.bird.flap_wings(t);
   }
 
   drawJoints(caller) {
