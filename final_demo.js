@@ -3,6 +3,7 @@ import {Hermite_Spline, Curve_Shape} from "./spline.js";
 import {Articulated_Body} from "./articulated_body.js";
 import {Cloth_Simulation} from "./cloth_simulation.js";
 import {Frenet_Spline} from './frenet_frame.js';
+import {Bird} from "./bird.js";
 
 // Pull these names into this module's scope for convenience:
 const { vec, vec3, vec4, color, Mat4, Shader, Texture, Component } = tiny;
