@@ -990,7 +990,17 @@ export class Final_Demo extends Final_demo_base
     );
     this.new_line();
 
-    this.key_triggered_button( "Debug camera", [ "x" ],
+    this.key_triggered_button( "Birds camera", [ "b" ],
+        () => Shader.assign_camera(Mat4.look_at(vec3 (7, 3.3, 4), vec3 (15, 3.3, 10), vec3 (0, 1, 0)), this.uniforms)
+    );
+    this.new_line();
+
+    this.key_triggered_button( "Overview camera", [ "v" ],
+        () => Shader.assign_camera(Mat4.look_at(vec3 (54, 8, 43), vec3 (10, 3.3, -5), vec3 (0, 1, 0)), this.uniforms)
+    );
+    this.new_line();
+
+    this.key_triggered_button( "Debug camera", [ "Shift", "D" ],
         () => Shader.assign_camera(Mat4.look_at(vec3 (15, 8, 20), vec3 (5, 5, 0), vec3 (0, 1, 0)), this.uniforms)
     );
     this.new_line();
