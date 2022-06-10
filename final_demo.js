@@ -30,6 +30,7 @@ const Final_demo_base = defs.Final_demo_base =
           'r_cyl': new defs.Rounded_Capped_Cylinder(25, 50),
           'tall_wall'  : new defs.Cube(),
           'wide_wall'  : new defs.Cube(),
+          'torus' : new defs.Torus(15,30),
         };
 
         this.sample_cnt = 0;
@@ -914,6 +915,25 @@ export class Final_Demo extends Final_demo_base
     this.shapes.xy_curtain_sheet.copy_onto_graphics_card(caller.context, ["position", "normal"], false);
 
 
+    //Cups
+    let cup = Mat4.translation(3,2.225,2).times(Mat4.scale(.2,.7,.2)).times(Mat4.rotation(Math.PI/2,1,0,0));
+    this.shapes.torus.draw(caller, this.uniforms, cup, this.materials.metal);
+    cup = Mat4.translation(4,0,0).times(cup);
+    this.shapes.torus.draw(caller, this.uniforms, cup, this.materials.metal);
+    cup = Mat4.translation(4,0,0).times(cup);
+    this.shapes.torus.draw(caller, this.uniforms, cup, this.materials.metal);
+    //Plates
+    let plate = Mat4.translation(4,2,2).times(Mat4.scale(.5,.1,.5)).times(Mat4.rotation(Math.PI/2,1,0,0));
+    this.shapes.torus.draw(caller, this.uniforms, plate, {...this.materials.steel, color: color(1,1,1,1)});
+    plate = Mat4.translation(4,0,0).times(plate);
+    this.shapes.torus.draw(caller, this.uniforms, plate, {...this.materials.steel, color: color(1,1,1,1)});
+    plate = Mat4.translation(4,0,0).times(plate);
+    this.shapes.torus.draw(caller, this.uniforms, plate, {...this.materials.steel, color: color(1,1,1,1)});
+
+
+    // let wood_table = Mat4.translation(7,2,20).times(Mat4.scale(4, 0.1, 1.5));
+    // this.shapes.box.draw(caller, this.uniforms, wood_table, {...this.materials.wood_planks});
+    
     /***************
      * Draw window *
      ***************/
